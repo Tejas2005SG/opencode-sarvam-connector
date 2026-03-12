@@ -33,6 +33,7 @@ export interface Provider {
 
 export interface LoaderResult {
   apiKey: string;
+  baseURL?: string;
   fetch(input: FetchInput, init?: RequestInit): Promise<Response>;
 }
 

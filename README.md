@@ -36,6 +36,10 @@ this README.
   "plugin": ["opencode-sarvam-multi-auth@latest"],
   "provider": {
     "sarvam": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://api.sarvam.ai/v1"
+      },
       "models": {
         "sarvam-105b": {
           "name": "Sarvam 105B",

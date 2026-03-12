@@ -250,6 +250,11 @@ async function buildLoaderResult(
 
   return {
     apiKey: "",
+    // Expose baseURL so OpenCode builds valid request URLs even when the user
+    // has not configured provider.baseURL in opencode.json. Without this,
+    // OpenCode produces "undefined/chat/completions" which Node rejects before
+    // our fetch interceptor can run.
+    baseURL: `${sarvamBaseUrl}/v1`,
     async fetch(rawInput: FetchInput, init?: RequestInit): Promise<Response> {
       // Rewrite broken base URL before any processing.
       // OpenCode builds `${provider.baseURL}/path`; if baseURL is unconfigured

@@ -78,6 +78,60 @@ describe("createSarvamPlugin integration", () => {
     await removeTempDirWithRetry(tempDir);
   });
 
+  it("handles 'undefined/chat/completions' URL — the exact error users see when baseURL is missing from opencode.json", async () => {
+    server.setBehavior("direct-key", {
+      chatQueue: [
+        {
+          status: 200,
+          body: {
+            choices: [{ message: { role: "assistant", content: "ok-no-baseurl" } }],
+            usage: { total_tokens: 10 }
+          }
+        }
+      ]
+    });
+
+    const context: PluginContext = { client: {}, directory: tempDir };
+    const plugin = await createSarvamPlugin("sarvam")(context);
+    const loader = asLoaderResult(
+      await plugin.auth.loader(
+        async () => ({ type: "api_key", key: "direct-key" }),
+        { models: { "sarvam-105b": {} } }
+      )
+    );
+
+    // Simulate OpenCode building URL as `${provider.baseURL}/chat/completions`
+    // when provider.baseURL is undefined — the exact URL that caused ERR_INVALID_URL.
+    const response = await loader.fetch("undefined/chat/completions", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        model: "sarvam-105b",
+        messages: [{ role: "user", content: "hello" }]
+      })
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      choices: [{ message: { content: "ok-no-baseurl" } }]
+    });
+  });
+
+  it("loader result includes baseURL so OpenCode never constructs an undefined URL", async () => {
+    const context: PluginContext = { client: {}, directory: tempDir };
+    const plugin = await createSarvamPlugin("sarvam")(context);
+    const loaderResult = await plugin.auth.loader(
+      async () => ({ type: "api_key", key: "any-key" }),
+      { models: {} }
+    );
+
+    // baseURL must be a fully-qualified URL — never undefined or "undefined/..."
+    const baseURL = (loaderResult as Record<string, unknown>).baseURL;
+    expect(typeof baseURL).toBe("string");
+    expect(() => new URL(baseURL as string)).not.toThrow();
+    expect(baseURL).toMatch(/^https?:\/\//);
+  });
+
   it("forwards the selected direct-auth model and top_p to Sarvam", async () => {
     server.setBehavior("direct-key", {
       chatQueue: [
