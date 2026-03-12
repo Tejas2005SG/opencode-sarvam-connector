@@ -35,29 +35,34 @@ function normalizeModel(model: string): string {
   return model.startsWith("sarvam/") ? model : `sarvam/${model}`;
 }
 
-function normalizeMessages(rawMessages: Array<{ role: string; content: string }> | undefined): ChatMessage[] {
+function normalizeMessages(rawMessages: any[] | undefined): ChatMessage[] {
   if (!rawMessages) {
     return [];
   }
 
-  return rawMessages.map((message, index) => {
-    if (typeof message.content !== "string") {
-      throw new Error(`Invalid message content at index ${index}.`);
+  return rawMessages.map((message) => {
+    // Flatten content: OpenCode may send string, null, or array (multipart).
+    let content: string | null = null;
+    if (typeof message.content === "string") {
+      content = message.content;
+    } else if (Array.isArray(message.content)) {
+      // Multipart content – extract text parts and join them.
+      const textParts = message.content
+        .filter((part: any) => part?.type === "text" && typeof part.text === "string")
+        .map((part: any) => part.text);
+      content = textParts.length > 0 ? textParts.join("\n") : null;
     }
+    // else: null / undefined → stays null (valid for assistant tool-call turns)
 
-    if (
-      message.role !== "system" &&
-      message.role !== "user" &&
-      message.role !== "assistant" &&
-      message.role !== "tool"
-    ) {
-      throw new Error(`Invalid chat role at index ${index}: ${message.role}`);
-    }
-
-    return {
+    const msg: any = {
       role: message.role,
-      content: message.content
+      content,
     };
+    if (message.tool_calls) msg.tool_calls = message.tool_calls;
+    if (message.tool_call_id) msg.tool_call_id = message.tool_call_id;
+    if (message.name) msg.name = message.name;
+
+    return msg;
   });
 }
 
@@ -138,6 +143,8 @@ async function chatWithDirectApiKey(
     temperature?: number;
     top_p?: number;
     max_tokens?: number;
+    tools?: any[];
+    tool_choice?: any;
   }
 ): Promise<unknown> {
   const response = await requestSarvamChatCompletion(
@@ -147,7 +154,9 @@ async function chatWithDirectApiKey(
       messages: payload.messages,
       temperature: payload.temperature,
       top_p: payload.top_p,
-      max_tokens: payload.max_tokens
+      max_tokens: payload.max_tokens,
+      tools: payload.tools,
+      tool_choice: payload.tool_choice
     },
     { sarvamBaseUrl: process.env.SARVAM_BASE_URL }
   );
@@ -273,10 +282,12 @@ async function buildLoaderResult(
       // Parse JSON body
       let payload: {
         model?: string;
-        messages?: Array<{ role: string; content: string }>;
+        messages?: any[];
         temperature?: number;
         top_p?: number;
         max_tokens?: number;
+        tools?: any[];
+        tool_choice?: any;
       };
       if (bodyText.trim().length === 0) {
         payload = {};
@@ -315,7 +326,9 @@ async function buildLoaderResult(
                 messages: normalizedMessages,
                 temperature: payload.temperature,
                 top_p: payload.top_p,
-                max_tokens: payload.max_tokens
+                max_tokens: payload.max_tokens,
+                tools: payload.tools,
+                tool_choice: payload.tool_choice
               },
               { accountManager: manager }
             );
@@ -334,7 +347,9 @@ async function buildLoaderResult(
             messages: normalizedMessages,
             temperature: payload.temperature,
             top_p: payload.top_p,
-            max_tokens: payload.max_tokens
+            max_tokens: payload.max_tokens,
+            tools: payload.tools,
+            tool_choice: payload.tool_choice
           });
           return toJsonResponse(200, responseBody as Record<string, unknown>);
         }

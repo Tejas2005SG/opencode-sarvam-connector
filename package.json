@@ -1,6 +1,6 @@
 {
   "name": "opencode-sarvam-multi-auth",
-  "version": "0.1.9",
+  "version": "0.2.1",
   "description": "OpenCode Sarvam connector with multi-account auth and credit rotation.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

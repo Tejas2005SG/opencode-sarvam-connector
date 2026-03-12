@@ -74,21 +74,17 @@ function normalizeModel(model: string): string {
   return model.startsWith("sarvam/") ? model.slice("sarvam/".length) : model;
 }
 
-export function toSarvamMessages(messages: ChatMessage[]): Array<{
-  role: "system" | "user" | "assistant";
-  content: string;
-}> {
-  return messages
-    .filter((message) => message.role !== "tool")
-    .map((message) => {
-      if (message.role === "assistant") {
-        return { role: "assistant" as const, content: message.content };
-      }
-      if (message.role === "system") {
-        return { role: "system" as const, content: message.content };
-      }
-      return { role: "user" as const, content: message.content };
-    });
+export function toSarvamMessages(messages: ChatMessage[]): any[] {
+  return messages.map((message: any) => {
+    const msg: any = {
+      role: message.role,
+      content: message.content || null,
+    };
+    if (message.tool_calls) msg.tool_calls = message.tool_calls;
+    if (message.tool_call_id) msg.tool_call_id = message.tool_call_id;
+    if (message.name) msg.name = message.name;
+    return msg;
+  });
 }
 
 export function resolveSarvamBaseUrl(baseUrl?: string): string {
@@ -194,7 +190,9 @@ export async function requestSarvamChatCompletion(
       messages: toSarvamMessages(input.messages),
       temperature: input.temperature,
       top_p: input.top_p,
-      max_tokens: input.max_tokens
+      max_tokens: input.max_tokens,
+      tools: input.tools,
+      tool_choice: input.tool_choice
     })
   });
 

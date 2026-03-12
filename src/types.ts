@@ -2,7 +2,10 @@ export type ChatRole = "system" | "user" | "assistant" | "tool";
 
 export interface ChatMessage {
   role: ChatRole;
-  content: string;
+  content: string | null;
+  tool_calls?: any[];
+  tool_call_id?: string;
+  name?: string;
 }
 
 export interface ChatWithRotationInput {
@@ -11,6 +14,8 @@ export interface ChatWithRotationInput {
   temperature?: number;
   top_p?: number;
   max_tokens?: number;
+  tools?: any[];
+  tool_choice?: any;
 }
 
 export interface AccountMeta {
@@ -24,7 +29,7 @@ export interface StoredAccount {
   credits?: number;
   meta?: AccountMeta;
 }
-
+ 
 export interface PublicAccount {
   email: string;
   credits?: number;
