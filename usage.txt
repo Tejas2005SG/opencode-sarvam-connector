@@ -1,0 +1,71 @@
+Sarvam OpenCode Plugin Usage
+============================
+
+Installation (antigravity-style)
+--------------------------------
+Option A: Let an LLM do it
+
+Paste:
+
+Install the opencode-sarvam-multi-auth plugin and add Sarvam model definitions to ~/.config/opencode/opencode.json.
+
+Option B: Manual setup
+
+1) Add plugin to ~/.config/opencode/opencode.json:
+
+{
+  "plugin": ["opencode-sarvam-multi-auth@latest"]
+}
+
+2) Login:
+
+opencode auth login
+
+Select:
+  Manually enter Sarvam API Key (Recommended)
+
+Paste:
+  apiKey
+
+Optional multi-account input:
+  email:apiKey
+  email:apiKey:credits
+  {"apiKey":"sk_xxx","email":"you@example.com","initialCredits":120000}
+
+3) Add model definitions in opencode.json (provider: sarvam):
+   - sarvam-105b
+   - sarvam-30b
+   - sarvam-m
+
+4) Use:
+
+opencode run "Hello" --model=sarvam/sarvam-105b
+
+
+Encryption key setup
+--------------------
+Generate:
+
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+PowerShell:
+
+$env:SARVAM_STORE_KEY = "<base64-32-byte-key>"
+
+
+Direct account management (optional CLI)
+----------------------------------------
+node dist/src/cli.js sarvam add
+node dist/src/cli.js sarvam list
+node dist/src/cli.js sarvam set-default user@example.com
+node dist/src/cli.js sarvam test user@example.com
+node dist/src/cli.js sarvam fudge user@example.com 50000
+node dist/src/cli.js sarvam remove user@example.com
+
+
+Important notes
+---------------
+- Rotation happens automatically on auth/quota exhaustion.
+- Unknown credits are usable but lower priority than known positive-credit accounts.
+- If SARVAM_STORE_KEY is lost, encrypted keys cannot be recovered.
+- Verify Sarvam Terms of Service before production use of multi-account rotation.

@@ -1,0 +1,15 @@
+{
+  "name": "opencode-sarvam-multi-auth",
+  "version": "0.1.0",
+  "provider": {
+    "id": "sarvam",
+    "module": "dist/src/plugin.js",
+    "export": "SarvamMultiAuthPlugin"
+  },
+  "commands": [
+    {
+      "name": "sarvam",
+      "entry": "dist/src/cli.js"
+    }
+  ]
+}

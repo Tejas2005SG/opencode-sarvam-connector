@@ -1,0 +1,4 @@
+Title: Verify Sarvam Terms of Service for multi-account rotation
+
+Please verify that multi-account request rotation is compliant with Sarvam ToS before production rollout.
+Reference: https://docs.sarvam.ai/api-reference-docs/introduction

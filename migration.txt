@@ -1,0 +1,36 @@
+Sarvam Connector Migration Guide
+================================
+
+From File Store to SQLite
+-------------------------
+1) Stop all running connector processes.
+2) Set backend env:
+   - SARVAM_STORE_BACKEND=sqlite
+   - Optional: OPENCODE_CONFIG_PATH=<base folder> or SARVAM_SQLITE_PATH=<full db path>
+3) Run a one-time migration script (example flow):
+   a. Load JSON file (~/.config/opencode/sarvam_accounts.json).
+   b. For each account row, insert into SQLite accounts table:
+      accounts(email PRIMARY KEY, encryptedApiKey TEXT, credits INTEGER, meta TEXT)
+   c. Copy default email into settings table (key=defaultEmail).
+4) Start connector and verify:
+   - opencode sarvam list
+   - opencode sarvam test <email>
+
+From SQLite to Redis (recommended pattern)
+------------------------------------------
+Redis adapter is not implemented in this repository, but use this pattern:
+1) Store each account in hash key: sarvam:account:<email>
+2) Keep sorted set for active priority:
+   - score strategy: known positive credits first (descending), unknown credits lower priority
+3) Keep default account key: sarvam:settings:defaultEmail
+4) Use Lua script for atomic credit deduction:
+   - read credits
+   - decrement
+   - clamp at 0
+5) Use distributed lock for rotation selection in multi-worker deployments.
+
+Operational notes
+-----------------
+- Keep SARVAM_STORE_KEY stable during migration to preserve decryptability.
+- If key changes, re-encrypt by decrypting with old key and encrypting with new key.
+- Validate accounts after migration with opencode sarvam test <email>.
