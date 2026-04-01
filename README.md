@@ -3,7 +3,7 @@
 > **⚠️ OpenCode only** — This plugin integrates [Sarvam AI](https://www.sarvam.ai) models with [OpenCode](https://opencode.ai). It is not compatible with Cursor, VS Code Copilot, or other AI coding tools.
 
 
-<img width="480" height="299" alt="image" src="https://github.com/user-attachments/assets/d1fa3c07-8608-4373-b453-c822112506ad" />
+<img width="1918" height="1197" alt="opencode-sarvam" src="https://github.com/user-attachments/assets/53315b3b-6730-4746-9875-a537e9603b87" />
 
 
 `opencode-sarvam-multi-auth` gives OpenCode access to Sarvam's frontier-class Indian language models with **automatic API key rotation**, encrypted local key storage, and seamless failover when a key's credits run out.
